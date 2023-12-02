@@ -7,5 +7,6 @@
       devShells.x86_64-linux.default = with pkgs; mkShell {
         packages = [ elixir elixir_ls ];
       };
+      day01 = pkgs.callPackage ./day01.nix { };
     };
 }
