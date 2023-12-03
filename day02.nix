@@ -10,48 +10,51 @@ let
   input = readFile ./day02input;
 
   games = input:
-    map
-      (line:
-        let
-          parts = splitString ": " line;
-          setsPart = last parts;
-          setsAsStrings = splitString "; " setsPart;
-          setsAsMultipleStrings = map (splitString ", ") setsAsStrings;
-          sets = map
-            (grabs:
-              map
-                (grab:
-                  let strs = splitString " " grab;
-                  in {
-                    count = toInt (head strs);
-                    colour = last strs;
-                  }
-                )
-                grabs
-            )
-            setsAsMultipleStrings;
+    map toGame (lines input);
 
-          drawsOfColour = colour: sets:
-            (filter (s: s.colour == colour) (flatten sets));
+  toGame = line:
+    let
+      parts = splitString ": " line;
+      setsPart = last parts;
+      setsAsStrings = splitString "; " setsPart;
+      setsAsMultipleStrings = map (splitString ", ") setsAsStrings;
+      sets = map setFromString setsAsMultipleStrings;
 
-          maxCubes = sets:
-            foldl' max 0 (map (s: s.count) sets);
+      grabsOfColour = colour: sets:
+        (filter (s: s.colour == colour) (flatten sets));
 
-        in
-        {
-          inherit sets;
-          id = toInt (last (splitString " " (head parts)));
-          redMax = maxCubes (drawsOfColour "red" sets);
-          blueMax = maxCubes (drawsOfColour "blue" sets);
-          greenMax = maxCubes (drawsOfColour "green" sets);
-        })
-      (lines input);
+      maxCubes = sets: foldl max 0 (map (s: s.count) sets);
 
-  possibleWith = { redCount, blueCount, greenCount }: games:
-    filter (game: game.redMax <= redCount && game.blueMax <= blueCount && game.greenMax <= greenCount) games;
+      redMax = maxCubes (grabsOfColour "red" sets);
+      blueMax = maxCubes (grabsOfColour "blue" sets);
+      greenMax = maxCubes (grabsOfColour "green" sets);
+    in
+    {
+      inherit sets redMax blueMax greenMax;
+      id = toInt (last (splitString " " (head parts)));
+      power = redMax * blueMax * greenMax;
+    };
 
-  matchingGames = possibleWith { redCount = 12; greenCount = 13; blueCount = 14; } (games input);
+  setFromString = map grabFromString;
 
-  sum = foldl add 0 (map (game: game.id) matchingGames);
+  grabFromString = grab:
+    let strs = splitString " " grab;
+    in {
+      count = toInt (head strs);
+      colour = last strs;
+    };
+
+  possibleWith = candidate: game:
+    game.redMax <= candidate.redCount &&
+    game.blueMax <= candidate.blueCount &&
+    game.greenMax <= candidate.greenCount;
+
+  matchingGames = filter (possibleWith { redCount = 12; greenCount = 13; blueCount = 14; }) (games input);
+
+  part1Sum = foldl add 0 (map (game: game.id) matchingGames);
+  part2Sum = foldl add 0 (map (game: game.power) (games input));
 in
-sum
+''
+  part 1: ${toString part1Sum}
+  part 2: ${toString part2Sum}
+''
