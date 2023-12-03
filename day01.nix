@@ -1,4 +1,6 @@
-{ lib }:
+{ lib
+, lines
+}:
 with builtins;
 with lib.strings;
 with lib.lists;
@@ -27,8 +29,7 @@ let
 
   input = builtins.readFile ./day01input;
   reverseString = s: concatStrings (reverseList (stringToCharacters s));
-  lines = filter (line: line != "") (splitString "\n" input);
-  convertedStringNumbers = map (line: "${firstNumber line}${lastNumber line}") lines;
+  convertedStringNumbers = map (line: "${firstNumber line}${lastNumber line}") (lines input);
   numbers = map (line: toInt line) convertedStringNumbers;
 
   toMappedInt = str: numberMap.${str};
