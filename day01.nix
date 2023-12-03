@@ -27,28 +27,32 @@ let
     "nine" = "9";
   };
 
-  input = builtins.readFile ./day01input;
+  input = readFile ./day01input;
   reverseString = s: concatStrings (reverseList (stringToCharacters s));
-  convertedStringNumbers = map (line: "${firstNumber line}${lastNumber line}") (lines input);
-  numbers = map (line: toInt line) convertedStringNumbers;
+  convertedStringNumbers = map firstAndLast (lines input);
+  numbers = map toInt convertedStringNumbers;
 
-  toMappedInt = str: numberMap.${str};
+  firstAndLast = line: "${firstNumber line}${lastNumber line}";
+
+  toMappedStringNumber = str: numberMap.${str};
 
   firstNumber = line:
-    toMappedInt (firstStringNumber line stringNumbers);
+    toMappedStringNumber (firstStringNumber line stringNumbers);
 
-  lastNumber = line: toMappedInt (lastStringNumber line);
+  lastNumber = line: toMappedStringNumber (lastStringNumber line);
 
   firstStringNumber = line: numbers:
     findFirst
-      (numberStr: isList (match "^${numberStr}.*" line))
+      (startsWith line)
       (firstStringNumber (substring 1 (-1) line) numbers)
       numbers;
+
+  startsWith = str: testStr: isList (match "^${testStr}.*" str);
 
   lastStringNumber = line:
     reverseString (firstStringNumber (reverseString line) reversedStringNumbers);
 
   stringNumbers = attrNames numberMap;
-  reversedStringNumbers = map (s: reverseString s) stringNumbers;
+  reversedStringNumbers = map reverseString stringNumbers;
 in
-foldl (a: b: a + b) 0 numbers
+foldl add 0 numbers
